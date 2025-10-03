@@ -1,0 +1,8 @@
+{
+  "name": "frontend",
+  "private": true,
+  "scripts": {
+    "build": "next build",
+    "export": "next export"
+  }
+}
