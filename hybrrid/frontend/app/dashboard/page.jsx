@@ -21,7 +21,7 @@ export default function DashboardPage() {
         const data = await me(token);
         setUser(data);
       } catch (err) {
-        setError(err.message || 'Failed to load user');
+        setError(err?.message || 'Failed to load user');
       } finally {
         setLoading(false);
       }
@@ -36,31 +36,54 @@ export default function DashboardPage() {
     router.push('/login');
   }
 
-  if (loading) {
-    return <div style={{ maxWidth: 640, margin: '2rem auto', padding: '1rem' }}>Loading...</div>;
-  }
-
-  if (error) {
-    return (
-      <div style={{ maxWidth: 640, margin: '2rem auto', padding: '1rem' }}>
-        <p style={{ color: 'crimson' }}>{error}</p>
-        <button onClick={() => router.push('/login')}>Go to Login</button>
-      </div>
-    );
-  }
-
   return (
-    <div style={{ maxWidth: 640, margin: '2rem auto', padding: '1rem' }}>
-      <h1>Dashboard</h1>
-      {user && (
-        <div style={{ marginTop: '1rem' }}>
-          <p><strong>ID:</strong> {user.id}</p>
-          <p><strong>Name:</strong> {user.name || '—'}</p>
-          <p><strong>Email:</strong> {user.email}</p>
-        </div>
-      )}
-      <div style={{ marginTop: '1rem' }}>
-        <button onClick={handleLogout}>Log out</button>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      <div className="w-full max-w-2xl bg-white p-6 rounded-lg shadow">
+        {loading && (
+          <div className="text-gray-600">Loading...</div>
+        )}
+
+        {!loading && error && (
+          <div>
+            <div className="mb-3 rounded border border-red-200 bg-red-50 p-2 text-sm text-red-700">{error}</div>
+            <button
+              onClick={() => router.push('/login')}
+              className="mt-2 inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+            >
+              Go to Login
+            </button>
+          </div>
+        )}
+
+        {!loading && !error && (
+          <div>
+            <div className="flex items-center justify-between">
+              <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
+              <button
+                onClick={handleLogout}
+                className="inline-flex items-center rounded-md bg-gray-800 px-4 py-2 text-white hover:bg-black"
+              >
+                Log out
+              </button>
+            </div>
+            {user && (
+              <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="rounded border border-gray-200 p-4">
+                  <p className="text-sm text-gray-500">ID</p>
+                  <p className="font-medium text-gray-900 break-all">{user.id}</p>
+                </div>
+                <div className="rounded border border-gray-200 p-4">
+                  <p className="text-sm text-gray-500">Name</p>
+                  <p className="font-medium text-gray-900">{user.name || '—'}</p>
+                </div>
+                <div className="rounded border border-gray-200 p-4">
+                  <p className="text-sm text-gray-500">Email</p>
+                  <p className="font-medium text-gray-900 break-all">{user.email}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
