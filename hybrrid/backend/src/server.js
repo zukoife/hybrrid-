@@ -8,9 +8,25 @@ dotenv.config();
 
 const app = express();
 
+// Basic production hardening
+app.disable('x-powered-by');
+
+// CORS configuration
+const allowedOrigin = process.env.CORS_ORIGIN || '*';
+app.use(cors({ origin: allowedOrigin }));
+
 // Middleware
-app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));
+
+// Simple request logger (production-safe, minimal)
+app.use((req, _res, next) => {
+  const start = Date.now();
+  const { method, url } = req;
+  next();
+  const durationMs = Date.now() - start;
+  // Avoid logging bodies to keep secrets safe
+  console.log(`[${new Date().toISOString()}] ${method} ${url} ${durationMs}ms`);
+});
 
 // Connect to MongoDB
 const mongoUri = process.env.MONGO_URI;
@@ -20,9 +36,7 @@ if (!mongoUri) {
 }
 
 mongoose
-  .connect(mongoUri, { 
-    // options can be added if needed
-  })
+  .connect(mongoUri, {})
   .then(() => {
     console.log('MongoDB connected');
   })
@@ -36,10 +50,17 @@ const authRouter = require('./routes/auth');
 app.use('/api/auth', authRouter);
 
 // Health check
-app.get('/health', (_, res) => res.json({ status: 'ok' }));
+app.get('/health', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  return res.json({ status: 'ok', uptime: process.uptime() });
+});
 
 // Start server
-const port = process.env.PORT || 4000;
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-});
+const port = Number(process.env.PORT) || 4000;
+app
+  .listen(port, () => {
+    console.log(`Server running on port ${port} (env: ${process.env.NODE_ENV || 'development'})`);
+  })
+  .on('error', (err) => {
+    console.error('HTTP server error:', err);
+  });
